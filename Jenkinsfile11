@@ -1,5 +1,6 @@
 pipeline {
     agent any
+
     environment {
         REPO_URL = 'https://github.com/Faizamunir720/django-todo-cicd.git'
         BRANCH   = 'develop'
@@ -8,10 +9,7 @@ pipeline {
     stages {
         stage('Code Checkout') {
             steps {
-                // Get the code from the given repository and branch
                 git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
-
-                // Show repository details and workspace contents
                 sh '''
                     echo "========== Repository details =========="
                     echo "Repository name : $(basename -s .git "$(git config --get remote.origin.url)")"
@@ -23,6 +21,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Build') {
             agent {
                 docker {
@@ -48,13 +47,14 @@ pipeline {
                     echo 'Waiting for 2 minutes before stopping and deleting containers...'
                     sleep 120
                     echo 'Stopping container...'
-                    sh 'docker stop todo_container'
+                    sh 'docker stop todo_container || true'
                     echo 'Removing container...'
-                    sh 'docker rm todo_container'
+                    sh 'docker rm todo_container || true'
                 }
             }
         }
     }
+
     post {
         success {
             echo 'Pipeline executed successfully'
