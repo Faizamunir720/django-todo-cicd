@@ -1,7 +1,28 @@
 pipeline {
     agent any
+    environment {
+        REPO_URL = 'https://github.com/Faizamunir720/django-todo-cicd.git'
+        BRANCH   = 'develop'
+    }
 
     stages {
+        stage('Code Checkout') {
+            steps {
+                // Get the code from the given repository and branch
+                git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+
+                // Show repository details and workspace contents
+                sh '''
+                    echo "========== Repository details =========="
+                    echo "Repository name : $(basename -s .git "$(git config --get remote.origin.url)")"
+                    echo "Remote URL      : $(git config --get remote.origin.url)"
+                    echo "Current branch  : $(git rev-parse --abbrev-ref HEAD)"
+                    echo "Latest commit   : $(git log -1 --oneline)"
+                    echo "========== Files in workspace: $WORKSPACE =========="
+                    ls -la
+                '''
+            }
+        }
         stage('Build') {
             agent {
                 docker {
