@@ -37,19 +37,30 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+                stage('Deploy') {
             steps {
-                sh 'docker biuld -t todo .'   // intentional error
-                sh 'docker run -d -p 8000:8000 --name todo_container todo'
+                sh 'docker build -t todo .'
+
+                // Remove leftovers from an earlier failed run, if any
+                sh 'docker rm -f todo_container1 todo_container2 || true'
+
+                // Two containers from the same image
+                sh 'docker run -d -p 8000:8000 --name todo_container1 todo'
+                sh 'docker run -d -p 8001:8000 --name todo_container2 todo'
+
+                // Verify both are running
+                sh 'sleep 5'
+                sh 'docker ps --filter "name=todo_container"'
+                sh 'docker inspect -f "{{.Name}} running={{.State.Running}}" todo_container1 todo_container2'
             }
             post {
                 always {
                     echo 'Waiting for 2 minutes before stopping and deleting containers...'
                     sleep 120
-                    echo 'Stopping container...'
-                    sh 'docker stop todo_container || true'
-                    echo 'Removing container...'
-                    sh 'docker rm todo_container || true'
+                    echo 'Stopping containers...'
+                    sh 'docker stop todo_container1 todo_container2 || true'
+                    echo 'Removing containers...'
+                    sh 'docker rm todo_container1 todo_container2 || true'
                 }
             }
         }
